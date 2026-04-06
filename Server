@@ -1,0 +1,96 @@
+const express = require("express");
+const mysql = require("mysql2");
+const cors = require("cors");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// MySQL Connection
+const db = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "Saditya111*",  // CHANGE THIS to your MySQL password
+    database: "event_system"
+});
+
+db.connect(err => {
+    if (err) {
+        console.log("MySQL Connection Error:", err);
+    } else {
+        console.log("MySQL Connected Successfully");
+
+        // Create table if not exists
+        const createTable = `
+            CREATE TABLE IF NOT EXISTS registrations (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                fullName VARCHAR(100) NOT NULL,
+                studentId VARCHAR(50) NOT NULL,
+                email VARCHAR(100) NOT NULL,
+                phone VARCHAR(20),
+                eventName VARCHAR(100) NOT NULL,
+                department VARCHAR(100),
+                year VARCHAR(50),
+                registrationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+        db.query(createTable, (err) => {
+            if (err) console.log("Table creation error:", err);
+            else console.log("Table ready");
+        });
+    }
+});
+
+// REGISTER endpoint
+app.post("/register", (req, res) => {
+    const { fullName, studentId, email, phone, eventName, department, year } = req.body;
+
+    const check = "SELECT * FROM registrations WHERE studentId=? AND eventName=?";
+
+    db.query(check, [studentId, eventName], (err, result) => {
+        if (err) {
+            return res.json({ message: "Database error" });
+        }
+
+        if (result.length > 0) {
+            return res.json({ message: "Already registered for this event" });
+        }
+
+        const sql = `
+            INSERT INTO registrations
+            (fullName, studentId, email, phone, eventName, department, year)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+        db.query(sql, [fullName, studentId, email, phone, eventName, department, year], (err) => {
+            if (err) {
+                res.json({ message: "Registration failed" });
+            } else {
+                res.json({ message: "Registered successfully" });
+            }
+        });
+    });
+});
+
+// GET all registrations
+app.get("/registrations", (req, res) => {
+    db.query("SELECT * FROM registrations ORDER BY id DESC", (err, data) => {
+        if (err) {
+            res.json([]);
+        } else {
+            res.json(data);
+        }
+    });
+});
+
+// DELETE registration
+app.delete("/delete/:id", (req, res) => {
+    db.query("DELETE FROM registrations WHERE id=?", [req.params.id], (err) => {
+        if (err) {
+            res.json({ message: "Delete failed" });
+        } else {
+            res.json({ message: "Deleted successfully" });
+        }
+    });
+});
+
+app.listen(3000, () => console.log("Server running on http://localhost:3000"));
