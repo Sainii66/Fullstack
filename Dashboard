@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #667eea; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #667eea; color: white; }
+        button { padding: 8px 12px; margin: 5px; cursor: pointer; }
+        .logout { background: red; color: white; border: none; }
+        .stats { background: #28a745; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Dashboard</h2>
+
+        <div class="stats">
+            Total Registrations: <span id="total">0</span>
+        </div>
+
+        <input type="text" id="search" placeholder="Search by name..." onkeyup="filterData()" style="width: 200px; padding: 8px;">
+        <button onclick="logout()" class="logout">Logout</button>
+        <hr>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        // Check if admin is logged in
+        if (localStorage.getItem('admin') !== 'true') {
+            alert('Please login first');
+            window.location.href = 'admin.html';
+        }
+
+        let allData = [];
+
+        async function loadData() {
+            try {
+                const response = await fetch('http://localhost:3000/registrations');
+                const data = await response.json();
+                allData = data;
+                document.getElementById('total').innerText = data.length;
+                displayData(data);
+            } catch (err) {
+                document.getElementById('output').innerHTML = '<p style="color:red;">Error: Backend not running. Make sure node server.js is running.</p>';
+            }
+        }
+
+        function displayData(data) {
+            if (data.length === 0) {
+                document.getElementById('output').innerHTML = '<p>No registrations found. Please register a student from index.html</p>';
+                return;
+            }
+
+            let html = '<table><tr><th>ID</th><th>Name</th><th>Student ID</th><th>Email</th><th>Event</th><th>Date</th><th>Action</th></tr>';
+            data.forEach(r => {
+                html += `<tr>
+                    <td>${r.id}</td>
+                    <td>${r.fullName}</td>
+                    <td>${r.studentId}</td>
+                    <td>${r.email}</td>
+                    <td>${r.eventName}</td>
+                    <td>${r.registrationDate || 'N/A'}</td>
+                    <td><button onclick="deleteReg(${r.id})">Delete</button></td>
+                </tr>`;
+            });
+            html += '</table>';
+            document.getElementById('output').innerHTML = html;
+        }
+
+        function filterData() {
+            const term = document.getElementById('search').value.toLowerCase();
+            const filtered = allData.filter(r => r.fullName.toLowerCase().includes(term));
+            displayData(filtered);
+        }
+
+        async function deleteReg(id) {
+            if (confirm('Delete this registration?')) {
+                await fetch('http://localhost:3000/delete/' + id, { method: 'DELETE' });
+                loadData();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('admin');
+            window.location.href = 'admin.html';
+        }
+
+        // Load data when page opens
+        loadData();
+    </script>
+</body>
+</html>
