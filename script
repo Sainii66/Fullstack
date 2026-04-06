@@ -1,0 +1,184 @@
+const API = "http://localhost:3000";
+
+// ===== REGISTER PAGE =====
+const form = document.getElementById("registrationForm");
+
+if (form) {
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const data = {
+            fullName: document.getElementById("fullName").value,
+            studentId: document.getElementById("studentId").value,
+            email: document.getElementById("email").value,
+            phone: document.getElementById("phone").value || "N/A",
+            eventName: document.getElementById("eventName").value,
+            department: document.getElementById("department").value || "Not Specified",
+            year: document.getElementById("year").value || "Not Specified"
+        };
+
+        fetch(API + "/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(res => {
+            showMessage(res.message, res.message === "Registered successfully" ? "success" : "error");
+            if (res.message === "Registered successfully") {
+                form.reset();
+            }
+        })
+        .catch(err => {
+            showMessage("Server error. Make sure backend is running!", "error");
+        });
+    });
+}
+
+// ===== ADMIN LOGIN PAGE =====
+const loginForm = document.getElementById("adminLoginForm");
+
+if (loginForm) {
+    loginForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        if (username === "admin" && password === "admin123") {
+            localStorage.setItem("admin", "true");
+            window.location.href = "dashboard.html.html";
+        } else {
+            showLoginMessage("Invalid username or password!", "error");
+        }
+    });
+}
+
+// ===== DASHBOARD PAGE =====
+let allData = [];
+const table = document.getElementById("tableBody");
+
+if (table) {
+    // Check if admin is logged in
+    if (localStorage.getItem("admin") !== "true") {
+        window.location.href = "admin.html";
+    }
+
+    function load() {
+        fetch(API + "/registrations")
+            .then(res => res.json())
+            .then(data => {
+                allData = data;
+                render(data);
+                document.getElementById("totalRegistrations").textContent = data.length;
+
+                // Calculate unique events
+                const uniqueEvents = [...new Set(data.map(r => r.eventName))];
+                document.getElementById("totalEvents").textContent = uniqueEvents.length;
+
+                // Calculate unique students
+                const uniqueStudents = [...new Set(data.map(r => r.studentId))];
+                document.getElementById("totalStudents").textContent = uniqueStudents.length;
+            })
+            .catch(err => {
+                document.getElementById("tableBody").innerHTML = '<tr><td colspan="9" style="text-align: center; color: red;">Error loading data. Make sure backend is running!</td></tr>';
+            });
+    }
+
+    function render(data) {
+        if (data.length === 0) {
+            document.getElementById("tableBody").innerHTML = '<tr><td colspan="9" style="text-align: center;">No registrations found</td></tr>';
+            return;
+        }
+
+        document.getElementById("tableBody").innerHTML = data.map(r => `
+            <tr>
+                <td>${escapeHtml(r.fullName)}</td>
+                <td>${escapeHtml(r.studentId)}</td>
+                <td>${escapeHtml(r.email)}</td>
+                <td>${escapeHtml(r.phone || 'N/A')}</td>
+                <td><span class="event-badge">${escapeHtml(r.eventName)}</span></td>
+                <td>${escapeHtml(r.department || 'Not Specified')}</td>
+                <td>${escapeHtml(r.year || 'Not Specified')}</td>
+                <td>${r.registrationDate ? new Date(r.registrationDate).toLocaleString() : 'N/A'}</td>
+                <td><button class="delete-btn" onclick="deleteReg(${r.id})">Delete</button></td>
+            </tr>
+        `).join('');
+    }
+
+    window.filterRegistrations = function() {
+        const term = document.getElementById("searchInput").value.toLowerCase();
+        const filtered = allData.filter(r =>
+            r.fullName.toLowerCase().includes(term) ||
+            r.studentId.toLowerCase().includes(term) ||
+            r.email.toLowerCase().includes(term)
+        );
+        render(filtered);
+    };
+
+    window.deleteReg = function(id) {
+        if (confirm("Are you sure you want to delete this registration?")) {
+            fetch(API + "/delete/" + id, { method: "DELETE" })
+                .then(() => load());
+        }
+    };
+
+    window.exportToCSV = function() {
+        if (allData.length === 0) {
+            alert("No data to export!");
+            return;
+        }
+
+        let csv = "Name,Student ID,Email,Phone,Event,Department,Year,Date\n";
+        allData.forEach(r => {
+            csv += `"${r.fullName}","${r.studentId}","${r.email}","${r.phone || 'N/A'}","${r.eventName}","${r.department || 'Not Specified'}","${r.year || 'Not Specified'}","${r.registrationDate || 'N/A'}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `registrations_${new Date().toISOString().split("T")[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    window.logout = function() {
+        localStorage.removeItem("admin");
+        window.location.href = "admin.html";
+    };
+
+    load();
+}
+
+// ===== HELPER FUNCTIONS =====
+function showMessage(msg, type) {
+    const m = document.getElementById("message");
+    if (m) {
+        m.textContent = msg;
+        m.className = `message ${type}`;
+        m.style.display = "block";
+        setTimeout(() => {
+            m.style.display = "none";
+        }, 3000);
+    }
+}
+
+function showLoginMessage(msg, type) {
+    const m = document.getElementById("loginMessage");
+    if (m) {
+        m.textContent = msg;
+        m.className = `message ${type}`;
+        m.style.display = "block";
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
