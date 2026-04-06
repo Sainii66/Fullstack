@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration</title>
+    <link rel="stylesheet" href="style.css.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>College Event Registration System</h1>
+            <p>Register for college events</p>
+        </div>
+
+        <div class="form-container">
+            <h2>Student Registration Form</h2>
+
+            <form id="registrationForm">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="fullName" placeholder="Enter full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Student ID *</label>
+                    <input type="text" id="studentId" placeholder="Enter student ID" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="email" placeholder="Enter email" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="phone" placeholder="Enter phone number">
+                </div>
+
+                <div class="form-group">
+                    <label>Select Event *</label>
+                    <select id="eventName" required>
+                        <option value="">-- Select Event --</option>
+                        <option value="Tech Fest">Tech Fest</option>
+                        <option value="Hackathon">Hackathon</option>
+                        <option value="AI Workshop">AI Workshop</option>
+                        <option value="Cultural Fest">Cultural Fest</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Department</label>
+                    <select id="department">
+                        <option value="">-- Select --</option>
+                        <option value="CS">Computer Science</option>
+                        <option value="IT">Information Technology</option>
+                        <option value="EC">Electronics</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Year</label>
+                    <select id="year">
+                        <option value="">-- Select --</option>
+                        <option value="1st">1st Year</option>
+                        <option value="2nd">2nd Year</option>
+                        <option value="3rd">3rd Year</option>
+                        <option value="4th">4th Year</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-submit">Register Now</button>
+            </form>
+
+            <div id="message" class="message"></div>
+        </div>
+
+        <div class="admin-link">
+            <a href="admin.html.html">Admin Login</a>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
