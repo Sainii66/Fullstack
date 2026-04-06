@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="style.css.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Admin Portal</h1>
+            <p>Login to manage registrations</p>
+        </div>
+
+        <div class="form-container">
+            <h2>Administrator Login</h2>
+
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="Enter username" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Enter password" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Login</button>
+            </form>
+
+            <div id="loginMessage" class="message"></div>
+
+            <div style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px; text-align: center;">
+                <strong>Demo Credentials:</strong><br>
+                Username: <code>admin</code><br>
+                Password: <code>admin123</code>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'admin123') {
+                localStorage.setItem('admin', 'true');
+                alert('Login successful! Click OK to go to dashboard.');
+                window.location.href = 'dashboard.html.html';
+            } else {
+                const msgDiv = document.getElementById('loginMessage');
+                msgDiv.textContent = 'Invalid username or password!';
+                msgDiv.className = 'message error';
+                msgDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
